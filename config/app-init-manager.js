@@ -1,6 +1,5 @@
 const express = require("express");
 const userRoute = require('../routes/router');
-const testRoute = require('../routes/test');
 
 
 const intializeApp = () => {
