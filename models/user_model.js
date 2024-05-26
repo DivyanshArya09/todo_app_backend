@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  todos: [
+    {
+      title: String,
+      description: String,
+    }
+  ],
   firstName: String,
   lastName: String,
    

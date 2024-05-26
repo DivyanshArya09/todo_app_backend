@@ -23,17 +23,64 @@ const loginUserInDB = async (req, res, next) => {
         if (!email || !password) {
             return res.status(400).send({ message: 'Please provide username and password' });
         }
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).send({ message: 'User not found' });
-        }  
-        const isMatch = await comparePassword(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid Password' });
+        try {
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(400).send({ message: 'User not found' });
+            }  
+            const isMatch = await comparePassword(password, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Invalid Password' });
+            }
+            jwtAuthMiddleWare(req, res, next);
+          return res.status(200).send({ user, token: genrateToken(user) });
+        } catch (error) {
+          return  res.status(400).send({ error: error.message });
         }
-        jwtAuthMiddleWare(req, res, next);
-      return res.status(200).send({ user, token: genrateToken(user) });
+    }
+
+    const addTodoInDB = async (req, res) => {
+        const {title, description} = req.body;
+        if (!title || !description) {
+            return res.status(400).send({ message: 'Please provide title and description' });
+        }
+        try {
+            const user = await User.findOne({ _id: req.user.user._id });
+            user.todos.push({title, description});
+            await user.save();
+            res.send({user});
+        } catch (error) {
+            res.status(400).send({ error: error.message });
+        }
+    }
+
+    const deleteTodoInDB = async (req, res) => {
+        const {id} = req.params;
+        const todo = await User.findOne({ _id: req.user.user._id, 'todos._id': id });
+        if (!todo) {
+            return res.status(400).send({ message: 'Todo not found' });
+        }
+        todo.todos.id(id).remove();
+        await todo.save();
+        res.send({todo});
+    }
+
+    const updateTodoInDB = async (req, res) => {
+        const {id} = req.params;
+
+        if (!id) {
+            return res.status(400).send({ message: 'Please provide id' });
+        }
+        const {title, description} = req.body;
+        const todo = await User.findOne({ _id: req.user.user._id, 'todos._id': id });
+        if (!todo) {
+            return res.status(400).send({ message: 'Todo not found' });
+        }
+        todo.todos.id(id).title = title;
+        todo.todos.id(id).description = description;
+        await todo.save();
+        res.send({todo});
     }
 
 
-module.exports = {registerUserInDB, loginUserInDB}
+module.exports = {registerUserInDB, loginUserInDB, addTodoInDB, updateTodoInDB, deleteTodoInDB}
