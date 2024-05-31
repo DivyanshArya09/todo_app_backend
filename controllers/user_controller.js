@@ -1,6 +1,6 @@
 const User = require('../models/user_model');
 const {comparePassword} = require('../utils/passwordManager');
-const {jwtAuthMiddleWare, genrateToken} = require('../middleware/jwt');
+const { genrateToken} = require('../middleware/jwt');
 
 
 const registerUserInDB =async (req, res) => {
@@ -32,7 +32,6 @@ const loginUserInDB = async (req, res, next) => {
             if (!isMatch) {
                 return res.status(400).json({ message: 'Invalid Password' });
             }
-            jwtAuthMiddleWare(req, res, next);
           return res.status(200).send({ user, token: genrateToken(user) });
         } catch (error) {
           return  res.status(400).send({ error: error.message });
@@ -60,19 +59,20 @@ const loginUserInDB = async (req, res, next) => {
         if (!todo) {
             return res.status(400).send({ message: 'Todo not found' });
         }
-        todo.todos.id(id).remove();
+        console.log('===========> todo', todo);
+        todo.todos.id(id).deleteOne();
         await todo.save();
-        res.send({todo});
+        res.status(200).json({todo});
     }
 
     const updateTodoInDB = async (req, res) => {
         const {id} = req.params;
-
         if (!id) {
             return res.status(400).send({ message: 'Please provide id' });
         }
         const {title, description} = req.body;
         const todo = await User.findOne({ _id: req.user.user._id, 'todos._id': id });
+        console.log('===========> todo', todo);
         if (!todo) {
             return res.status(400).send({ message: 'Todo not found' });
         }
